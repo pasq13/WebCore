@@ -1,69 +1,41 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace WebCore.Models
 {
-    public static class JwtManager
+    public class JwtManager
     {
+        private readonly string _secret;
+        private readonly string _expDate;
 
-        private const string Secret = "db3OIsj+BXE9NZDy0t8W3TcNekrF+2d/1sFnWG4HnV8TZY30iTOdtVWJG8abWvB1GlOgJuQZdcF2Luqm/hccMw==";
-
-        public static string GenerateToken(string username, string role, int expireMinutes = 20)
+        public JwtManager(IConfiguration config)
         {
-            var symmetricKey = Convert.FromBase64String(Secret);
-            var tokenHandler = new JwtSecurityTokenHandler();
+            _secret = config.GetSection("JwtConfig").GetSection("secret").Value;
+            _expDate = config.GetSection("JwtConfig").GetSection("expirationInMinutes").Value;
+        }
 
-            var now = DateTime.UtcNow;
+        public string GenerateSecurityToken(string email)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_secret);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
-                        {
-                            new Claim(ClaimTypes.Name, username),
-                            new Claim(ClaimTypes.Role, role)
-                        }),
-
-                Expires = now.AddMinutes(Convert.ToInt32(expireMinutes)),
-
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(symmetricKey), SecurityAlgorithms.HmacSha256Signature)
+                {
+                    new Claim(ClaimTypes.Email, email)
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(double.Parse(_expDate)),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
-            SecurityToken securityToken = tokenHandler.CreateToken(tokenDescriptor);
-            var token = tokenHandler.WriteToken(securityToken);
+            var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            return token;
+            return tokenHandler.WriteToken(token);
         }
 
-        public static ClaimsPrincipal GetPrincipal(string token)
-        {
-            try
-            {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
-
-                if (jwtToken == null)
-                    return null;
-
-                var symmetricKey = Convert.FromBase64String(Secret);
-
-                var validationParameters = new TokenValidationParameters()
-                {
-                    RequireExpirationTime = true,
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    IssuerSigningKey = new SymmetricSecurityKey(symmetricKey)
-                };
-
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
-
-                return principal;
-            }
-
-            catch (Exception)
-            {
-                return null;
-            }
-        }
     }
 }
