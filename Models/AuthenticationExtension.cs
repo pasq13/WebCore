@@ -6,8 +6,17 @@ using System.Text;
 
 namespace WebCore.Models
 {
+    /// <summary>
+    /// Modelo para poder realizar la autenticacion
+    /// </summary>
     public static class AuthenticationExtension
     {
+        /// <summary>
+        /// Metodo para añadir al servicio las caracteristicas del jwt
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="config"></param>
+        /// <returns></returns>
         public static IServiceCollection AddTokenAuthentication(this IServiceCollection services, IConfiguration config)
         {
             var secret = config.GetSection("JwtConfig").GetSection("secret").Value;
