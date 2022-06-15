@@ -6,7 +6,7 @@ using System.Web.Http;
 namespace WebCore.Controllers
 {
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize]
+    //[Microsoft.AspNetCore.Authorization.Authorize]
     [Microsoft.AspNetCore.Mvc.Route("api/heroes")]
     public class HeroesController : ControllerBase
     {

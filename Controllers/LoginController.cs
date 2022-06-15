@@ -22,16 +22,20 @@ namespace WebCore.Controllers
         [Microsoft.AspNetCore.Mvc.Route("login")]
         [Microsoft.AspNetCore.Mvc.HttpPost]
 
-        public async Task<string> GetAsync([FromUri] string correo, string pass)
+        public async Task<JsonResult> GetAsync([FromUri] string correo, string pass)
         {
             if (await Usuario.LoginUsuario(correo, pass))
             {
                 var jwt = new JwtManager(_config);
                 var token = jwt.GenerateSecurityToken(correo);
-                return token;
+                return new JsonResult(token);
+            }
+            else
+            {
+                return new JsonResult("error");
             }
 
-            throw new HttpResponseException(HttpStatusCode.Unauthorized);
+            
         }
 
         //[Microsoft.AspNetCore.Mvc.Route("test")]
